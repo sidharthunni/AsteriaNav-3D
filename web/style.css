@@ -685,3 +685,27 @@ input:checked + .slider.round:before {
 .log-entry.data { color: #ffffff; }
 .log-entry.ok { color: var(--accent-green); }
 .log-entry.warn { color: var(--accent-amber); }
+.btn-action.flyover {
+    background: rgba(255, 170, 0, 0.15);
+    border: 1px solid var(--accent-amber);
+    color: var(--accent-amber);
+    box-shadow: 0 0 10px rgba(255, 170, 0, 0.2);
+}
+
+.btn-action.flyover:hover, .btn-action.flyover.active {
+    background: var(--accent-amber);
+    color: #000;
+    box-shadow: 0 0 16px rgba(255, 170, 0, 0.6);
+}
+
+.btn-action.export {
+    background: rgba(32, 227, 134, 0.1);
+    border: 1px solid rgba(32, 227, 134, 0.4);
+    color: var(--accent-green);
+    font-size: 9.5px;
+}
+
+.btn-action.export:hover {
+    background: rgba(32, 227, 134, 0.25);
+    border-color: var(--accent-green);
+}
