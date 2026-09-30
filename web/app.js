@@ -609,6 +609,39 @@ function setupUIEventListeners() {
         logConsole("Camera Horizon Normalized", "sys");
     });
 
+    // Fullscreen Toggle
+    const btnFullscreen = document.getElementById("btn-fullscreen");
+    if (btnFullscreen) {
+        btnFullscreen.addEventListener("click", () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error("Fullscreen error:", err);
+                });
+                btnFullscreen.innerText = "EXIT FULLSCREEN";
+                btnFullscreen.classList.add("active");
+                logConsole("Display Mode: Hardware Fullscreen Active", "sys");
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    btnFullscreen.innerText = "FULLSCREEN";
+                    btnFullscreen.classList.remove("active");
+                    logConsole("Display Mode: Standard Windowed", "sys");
+                }
+            }
+        });
+
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) {
+                btnFullscreen.innerText = "FULLSCREEN";
+                btnFullscreen.classList.remove("active");
+            } else {
+                btnFullscreen.innerText = "EXIT FULLSCREEN";
+                btnFullscreen.classList.add("active");
+            }
+            setTimeout(onWindowResize, 100);
+        });
+    }
+
     // Audio SFX Toggle
     const btnAudio = document.getElementById("btn-audio-toggle");
     if (btnAudio) {
