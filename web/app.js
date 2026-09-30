@@ -17,10 +17,48 @@ let showHazards = true;
 let showPath = true;
 let showLanding = true;
 let cinematicOrbit = false;
+let cameraMode = "orbit"; // "orbit", "rover", "cinematic"
 let elevationData = [];
 let slopeData = [];
 let roverT = 0;
 let roverCurve = null;
+
+// Telemetry Audio Synthesizer (Web Audio API)
+let audioCtx = null;
+let audioEnabled = false;
+
+function initAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+    }
+}
+
+function playTelemetryTone(freq = 880, duration = 0.05, type = "sine", gainVal = 0.04) {
+    if (!audioEnabled || !audioCtx) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+}
+
+// Background periodic telemetry radar pulse
+setInterval(() => {
+    if (audioEnabled) {
+        playTelemetryTone(1320, 0.04, "sine", 0.02);
+        setTimeout(() => playTelemetryTone(1760, 0.03, "sine", 0.015), 70);
+    }
+}, 5000);
 
 // Clock & Telemetry
 let lastTime = performance.now();
@@ -504,6 +542,7 @@ function setupRaycaster(container) {
                 const slope = slopeData[gridY][gridX].toFixed(1);
                 const status = slope >= 25 ? "HAZARD" : (slope >= 14 ? "CAUTION" : "SAFE");
 
+                playTelemetryTone(status === "SAFE" ? 880 : (status === "CAUTION" ? 540 : 320), 0.05, "sine", 0.04);
                 document.getElementById("hud-coord").innerText = `LAT: ${(18.2 + pt.x*0.01).toFixed(4)}°N | LON: ${(77.4 + pt.z*0.01).toFixed(4)}°W`;
                 document.getElementById("hud-elev").innerText = `${elev} m`;
                 document.getElementById("hud-slope").innerText = `${slope}° (${status})`;
@@ -570,21 +609,59 @@ function setupUIEventListeners() {
         logConsole("Camera Horizon Normalized", "sys");
     });
 
-    // Cinematic Orbit Toggle
-    const btnFlyover = document.getElementById("btn-flyover");
-    if (btnFlyover) {
-        btnFlyover.addEventListener("click", () => {
-            cinematicOrbit = !cinematicOrbit;
-            btnFlyover.classList.toggle("active", cinematicOrbit);
-            btnFlyover.innerText = cinematicOrbit ? "STOP FLYOVER" : "CINEMATIC FLYOVER";
-            logConsole(`Cinematic Orbital Camera: ${cinematicOrbit ? "ACTIVE" : "STANDBY"}`, "sys");
+    // Audio SFX Toggle
+    const btnAudio = document.getElementById("btn-audio-toggle");
+    if (btnAudio) {
+        btnAudio.addEventListener("click", () => {
+            initAudioContext();
+            audioEnabled = !audioEnabled;
+            btnAudio.classList.toggle("active", audioEnabled);
+            btnAudio.innerText = audioEnabled ? "AUDIO SFX: ON" : "AUDIO SFX: OFF";
+            if (audioEnabled) {
+                playTelemetryTone(880, 0.08, "triangle", 0.05);
+                logConsole("Telemetry Audio Synthesizer Initialized (Web Audio)", "sys");
+            } else {
+                logConsole("Telemetry Audio Muted", "sys");
+            }
         });
     }
+
+    // Camera Tracking Modes
+    const btnOrbit = document.getElementById("btn-cam-orbit");
+    const btnRoverCam = document.getElementById("btn-cam-rover");
+    const btnFlyover = document.getElementById("btn-flyover");
+
+    function setCameraMode(mode) {
+        cameraMode = mode;
+        playTelemetryTone(640, 0.04, "sine", 0.03);
+        if (btnOrbit) btnOrbit.classList.toggle("active", mode === "orbit");
+        if (btnRoverCam) btnRoverCam.classList.toggle("active", mode === "rover");
+        if (btnFlyover) btnFlyover.classList.toggle("active", mode === "cinematic");
+
+        if (controls) {
+            controls.enabled = (mode === "orbit");
+        }
+
+        if (mode === "orbit") {
+            logConsole("Camera Horizon Normalized to Ground Station Orbit", "sys");
+        } else if (mode === "rover") {
+            logConsole("Camera Locked: Rover Chase Telemetry Cam", "sys");
+        } else if (mode === "cinematic") {
+            logConsole("Camera Locked: 360° Cinematic Topographic Recon Flyover", "sys");
+        }
+    }
+
+    if (btnOrbit) btnOrbit.addEventListener("click", () => setCameraMode("orbit"));
+    if (btnRoverCam) btnRoverCam.addEventListener("click", () => setCameraMode("rover"));
+    if (btnFlyover) btnFlyover.addEventListener("click", () => setCameraMode("cinematic"));
 
     // Export Telemetry Report
     const btnExport = document.getElementById("btn-export-telemetry");
     if (btnExport) {
-        btnExport.addEventListener("click", exportMissionReport);
+        btnExport.addEventListener("click", () => {
+            playTelemetryTone(1050, 0.06, "sine", 0.04);
+            exportMissionReport();
+        });
     }
 
     // Image Upload
@@ -705,16 +782,6 @@ let orbitAngle = 0;
 function animate() {
     requestAnimationFrame(animate);
 
-    // Cinematic Orbit Flyover
-    if (cinematicOrbit) {
-        orbitAngle += 0.003;
-        const radius = 95;
-        camera.position.x = Math.sin(orbitAngle) * radius;
-        camera.position.z = Math.cos(orbitAngle) * radius;
-        camera.position.y = 52 + Math.sin(orbitAngle * 2) * 10;
-        camera.lookAt(0, 8, 0);
-    }
-
     // Rover Motion along trajectory curve
     if (roverGroup && roverCurve && showPath) {
         roverT += 0.0016;
@@ -736,7 +803,24 @@ function animate() {
         document.getElementById("roll-bar").style.width = `${Math.min(Math.max((roll + 15) / 30 * 100, 5), 95)}%`;
     }
 
-    if (controls && !cinematicOrbit) controls.update();
+    // Dynamic Camera Tracking Modes
+    if (cameraMode === "cinematic") {
+        orbitAngle += 0.003;
+        const radius = 95;
+        camera.position.x = Math.sin(orbitAngle) * radius;
+        camera.position.z = Math.cos(orbitAngle) * radius;
+        camera.position.y = 52 + Math.sin(orbitAngle * 2) * 10;
+        camera.lookAt(0, 8, 0);
+    } else if (cameraMode === "rover" && roverGroup && roverCurve && showPath) {
+        const roverPos = roverGroup.position;
+        const tangent = roverCurve.getTangent(roverT).normalize();
+        const desiredCamPos = roverPos.clone().sub(tangent.clone().multiplyScalar(15)).add(new THREE.Vector3(0, 7.5, 0));
+        camera.position.lerp(desiredCamPos, 0.08);
+        const lookTarget = roverPos.clone().add(tangent.clone().multiplyScalar(12));
+        camera.lookAt(lookTarget);
+    } else {
+        if (controls) controls.update();
+    }
     renderer.render(scene, camera);
 
     // FPS Meter

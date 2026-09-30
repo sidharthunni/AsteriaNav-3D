@@ -40,6 +40,7 @@
             </div>
         </div>
         <div class="header-right">
+            <button class="audio-toggle-btn" id="btn-audio-toggle">AUDIO SFX: OFF</button>
             <div class="system-time">
                 <span class="time-label">TATHVA 26 // ASTERIA MISSION</span>
                 <span class="time-val" id="clock-display">UTC 08:34:12</span>
@@ -144,7 +145,14 @@
 
             <div class="panel-actions">
                 <button class="btn-action primary" id="btn-reconstruct">RECONSTRUCT TERRAIN</button>
-                <button class="btn-action flyover" id="btn-flyover">CINEMATIC FLYOVER</button>
+                <div class="cam-selector-wrapper">
+                    <span class="cam-label">CAMERA TRACKING MODE</span>
+                    <div class="cam-modes-grid">
+                        <button class="cam-btn active" id="btn-cam-orbit">ORBIT</button>
+                        <button class="cam-btn" id="btn-cam-rover">ROVER CHASE</button>
+                        <button class="cam-btn" id="btn-flyover">360° FLYOVER</button>
+                    </div>
+                </div>
                 <button class="btn-action secondary" id="btn-reset-cam">RESET 3D VIEW</button>
                 <button class="btn-action export" id="btn-export-telemetry">EXPORT MISSION REPORT (.JSON)</button>
             </div>
