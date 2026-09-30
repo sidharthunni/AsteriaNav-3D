@@ -1,12 +1,17 @@
 # AsteriaNav-3D
 ### India's First Indigenous Open-Architecture 3D Planetary Surface Reconstruction & Autonomous Deep-Space Rover Telemetry Engine
 
+[![Live Demo](https://img.shields.io/badge/Live%20Interactive%20Mission%20Control-Launch%20Engine-00f0ff?style=for-the-badge&logo=googlechrome&logoColor=black)](https://sidharthunni.github.io/AsteriaNav-3D/)
+
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)](https://www.python.org/)
 [![WebGL](https://img.shields.io/badge/WebGL-2.0-red?logo=webgl)](https://www.khronos.org/webgl/)
 [![Three.js](https://img.shields.io/badge/Three.js-r128-black?logo=three.js)](https://threejs.org/)
 [![Performance](https://img.shields.io/badge/FPS-60%20Locked%20(%3C16ms)-success)](#performance-benchmarks)
-[![Architecture](https://img.shields.io/badge/Air--Gapped-Zero%20Earth%20Uplink-brightgreen)](#)
+[![Air-Gapped](https://img.shields.io/badge/Air--Gapped-Zero%20Earth%20Uplink-brightgreen)](#)
 [![Tathva 26](https://img.shields.io/badge/Tathva%20'26-NIT%20Calicut-orange)](https://tathack.tathva.org/)
+
+> **Live Deployment URL**: [https://sidharthunni.github.io/AsteriaNav-3D/](https://sidharthunni.github.io/AsteriaNav-3D/)  
+> **Mission Control Local Server**: `http://localhost:8080` (Run with `bash run.sh`)
 
 ---
 
