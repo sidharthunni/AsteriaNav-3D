@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AsteriaNav 3D // India's 1st Indigenous Planetary Spatial Engine</title>
+    <!-- Three.js and OrbitControls CDN with fallback handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Mission Control Header -->
+    <header class="mission-header">
+        <div class="header-left">
+            <div class="mission-badge">
+                <span class="pulse-dot"></span>
+                <span class="badge-text">AUTONOMOUS TELEMETRY</span>
+            </div>
+            <div class="title-container">
+                <h1 class="brand-title">ASTERIANAV-3D</h1>
+                <p class="brand-subtitle">INDIA'S FIRST INDIGENOUS PLANETARY SURFACE RECONSTRUCTION &amp; ROVER ENGINE</p>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="telemetry-chip">
+                <span class="chip-label">COMMS LAG</span>
+                <span class="chip-val" id="chip-lag">14m 22s (AIR-GAPPED)</span>
+            </div>
+            <div class="telemetry-chip">
+                <span class="chip-label">FRAME RENDER</span>
+                <span class="chip-val" id="chip-latency">14.1 ms</span>
+            </div>
+            <div class="telemetry-chip">
+                <span class="chip-label">STATUS</span>
+                <span class="chip-val status-green" id="chip-status">60 FPS // LOCK</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="hud-header-btn" id="btn-fullscreen">FULLSCREEN</button>
+            <button class="audio-toggle-btn" id="btn-audio-toggle">AUDIO SFX: OFF</button>
+            <div class="system-time">
+                <span class="time-label">TATHVA 26 // ASTERIA MISSION</span>
+                <span class="time-val" id="clock-display">UTC 08:34:12</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-layout">
+        <!-- Left Sidebar: Controls & Planetary Dataset -->
+        <aside class="sidebar-panel left-panel">
+            <div class="panel-section">
+                <div class="section-title">
+                    <span class="icon">⬡</span>
+                    <h3>CELESTIAL RECONNAISSANCE</h3>
+                </div>
+                <div class="selector-group">
+                    <label for="terrain-select">SELECT TARGET SURFACE</label>
+                    <select id="terrain-select" class="hud-select">
+                        <option value="crater">Asteria Prime - Crater Basin (Analog)</option>
+                        <option value="canyon">Valles Marineris Escarpment Rift</option>
+                        <option value="boulders">Regolith Field with Boulder Hazards</option>
+                        <option value="highlands">High-Incline Plateau Highlands</option>
+                    </select>
+                </div>
+
+                <div class="upload-dropzone" id="drop-zone">
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                    <div class="drop-content" onclick="document.getElementById('image-upload').click()">
+                        <span class="upload-icon">⇪</span>
+                        <p class="drop-text">UPLOAD OPTICAL NAVCAM FRAME</p>
+                        <span class="drop-subtext">Converts 2D Image to 3D Metric Mesh</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <span class="icon">◈</span>
+                    <h3>3D VISUALIZATION ENGINE</h3>
+                </div>
+                <div class="mode-tabs">
+                    <button class="mode-btn active" data-mode="heatmap">Elevation Heatmap</button>
+                    <button class="mode-btn" data-mode="pointcloud">Laser Point Cloud</button>
+                    <button class="mode-btn" data-mode="wireframe">Tactical Wireframe</button>
+                    <button class="mode-btn" data-mode="surface">Regolith Surface</button>
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-header">
+                        <span>RELIEF EXAGGERATION</span>
+                        <span id="relief-val">1.8x</span>
+                    </div>
+                    <input type="range" id="relief-slider" min="0.5" max="3.5" step="0.1" value="1.8" class="hud-slider">
+                </div>
+
+                <div class="slider-control">
+                    <div class="slider-header">
+                        <span>POINT CLOUD DENSITY</span>
+                        <span id="density-val">100%</span>
+                    </div>
+                    <input type="range" id="density-slider" min="20" max="100" step="10" value="100" class="hud-slider">
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <span class="icon">⚠</span>
+                    <h3>AUTONOMOUS HAZARD ANALYSIS</h3>
+                </div>
+                
+                <div class="toggle-control">
+                    <label class="switch">
+                        <input type="checkbox" id="hazard-toggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">SLOPE GRADIENT HAZARD OVERLAY</span>
+                </div>
+
+                <div class="toggle-control">
+                    <label class="switch">
+                        <input type="checkbox" id="path-toggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">ROVER WAYPOINT TRAVERSAL VECTOR</span>
+                </div>
+
+                <div class="toggle-control">
+                    <label class="switch">
+                        <input type="checkbox" id="landing-toggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">SAFE TOUCHDOWN ELLIPSE</span>
+                </div>
+
+                <div class="hazard-legend">
+                    <div class="legend-item"><span class="legend-color safe"></span>Safe Corridor (&lt;12°)</div>
+                    <div class="legend-item"><span class="legend-color caution"></span>Cautionary (12°-25°)</div>
+                    <div class="legend-item"><span class="legend-color danger"></span>Hazard Zone (&gt;25°)</div>
+                </div>
+            </div>
+
+            <div class="panel-actions">
+                <button class="btn-action primary" id="btn-reconstruct">RECONSTRUCT TERRAIN</button>
+                <div class="cam-selector-wrapper">
+                    <span class="cam-label">CAMERA TRACKING MODE</span>
+                    <div class="cam-modes-grid">
+                        <button class="cam-btn active" id="btn-cam-orbit">ORBIT</button>
+                        <button class="cam-btn" id="btn-cam-rover">ROVER CHASE</button>
+                        <button class="cam-btn" id="btn-flyover">360° FLYOVER</button>
+                    </div>
+                </div>
+                <button class="btn-action secondary" id="btn-reset-cam">RESET 3D VIEW</button>
+                <button class="btn-action export" id="btn-export-telemetry">EXPORT MISSION REPORT (.JSON)</button>
+            </div>
+        </aside>
+
+        <!-- Center 3D Viewport -->
+        <main class="viewport-container" id="canvas-container">
+            <div class="crosshair top-left"></div>
+            <div class="crosshair top-right"></div>
+            <div class="crosshair bottom-left"></div>
+            <div class="crosshair bottom-right"></div>
+
+            <!-- On-Screen Spatial Coordinates HUD -->
+            <div class="spatial-hud-overlay">
+                <div class="hud-box">
+                    <span class="hud-metric-label">INSPECTED COORDINATE</span>
+                    <span class="hud-metric-value" id="hud-coord">X: 0.00m | Y: 0.00m</span>
+                </div>
+                <div class="hud-box">
+                    <span class="hud-metric-label">LOCAL ELEVATION (Z)</span>
+                    <span class="hud-metric-value highlight" id="hud-elev">14.62 m</span>
+                </div>
+                <div class="hud-box">
+                    <span class="hud-metric-label">SLOPE INCLINE</span>
+                    <span class="hud-metric-value" id="hud-slope">6.4° (SAFE)</span>
+                </div>
+            </div>
+
+            <!-- Viewport Compass / Grid Orientation indicator -->
+            <div class="view-compass">
+                <span class="compass-n">N</span>
+                <span class="compass-deg">AZ: 045° // ELEV: 30°</span>
+            </div>
+
+            <div class="watermark-tag">
+                ISRO / CHANDRAYAAN-ANALOG DEEP-SPACE ARCHITECTURE
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Live Rover Telemetry & Metrics -->
+        <aside class="sidebar-panel right-panel">
+            <div class="panel-section">
+                <div class="section-title">
+                    <span class="icon">◎</span>
+                    <h3>SURFACE TOPOMETRICS</h3>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="m-label">ACTIVE VOXELS</span>
+                        <span class="m-val" id="metric-voxels">65,536</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="m-label">ELEVATION RELIEF</span>
+                        <span class="m-val" id="metric-relief">35.0 m</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="m-label">TRAVERSABLE AREA</span>
+                        <span class="m-val status-green" id="metric-safe">78.4%</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="m-label">HAZARD DENSITY</span>
+                        <span class="m-val status-danger" id="metric-hazard">12.6%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <span class="icon">▲</span>
+                    <h3>ROVER ATTITUDE &amp; INCLINOMETER</h3>
+                </div>
+                <div class="attitude-gauges">
+                    <div class="gauge-box">
+                        <span class="gauge-title">PITCH</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" id="pitch-bar" style="width: 45%;"></div>
+                        </div>
+                        <span class="gauge-val" id="pitch-val">+2.4°</span>
+                    </div>
+                    <div class="gauge-box">
+                        <span class="gauge-title">ROLL</span>
+                        <div class="bar-container">
+                            <div class="bar-fill" id="roll-bar" style="width: 38%;"></div>
+                        </div>
+                        <span class="gauge-val" id="roll-val">-1.1°</span>
+                    </div>
+                </div>
+                <div class="stability-box">
+                    <span class="stab-label">STABILITY STATUS:</span>
+                    <span class="stab-badge safe" id="stab-status">OPTIMAL NAVIGATION</span>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">
+                    <span class="icon">⌖</span>
+                    <h3>SAFE TOUCHDOWN SITE</h3>
+                </div>
+                <div class="landing-info">
+                    <div class="info-row">
+                        <span>TARGET COORDINATES:</span>
+                        <span id="land-coords">GRID [48, 52]</span>
+                    </div>
+                    <div class="info-row">
+                        <span>SURFACE ROUGHNESS:</span>
+                        <span class="status-green" id="land-roughness">0.08 m (SMOOTH)</span>
+                    </div>
+                    <div class="info-row">
+                        <span>MEAN SLOPE:</span>
+                        <span class="status-green" id="land-slope">3.8°</span>
+                    </div>
+                    <div class="info-row">
+                        <span>LANDING CERTIFICATION:</span>
+                        <span class="status-green" id="land-cert">CERTIFIED SAFE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section flex-grow">
+                <div class="section-title">
+                    <span class="icon">⌨</span>
+                    <h3>MISSION TELEMETRY LOG</h3>
+                </div>
+                <div class="console-log" id="console-stream">
+                    <div class="log-entry sys">[08:34:10] ASTERIANAV-3D Engine Initialized.</div>
+                    <div class="log-entry sys">[08:34:11] WebGL 2.0 Vertex Shader Linked.</div>
+                    <div class="log-entry sys">[08:34:11] Camera Intrinsic Matrix K Calibrated.</div>
+                    <div class="log-entry data">[08:34:12] Generating 65,536 Metric Vertices...</div>
+                    <div class="log-entry ok">[08:34:12] Normal Gradient Pass: Slope computed.</div>
+                    <div class="log-entry ok">[08:34:13] Rover Waypoint Vector Optimized.</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
