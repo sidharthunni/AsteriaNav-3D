@@ -710,8 +710,8 @@ input:checked + .slider.round:before {
     border-color: var(--accent-green);
 }
 
-/* Audio Toggle Button in Header */
-.audio-toggle-btn {
+/* Audio & Fullscreen Toggle Buttons in Header */
+.audio-toggle-btn, .hud-header-btn {
     font-family: var(--font-mono);
     font-size: 10px;
     font-weight: 700;
@@ -722,16 +722,16 @@ input:checked + .slider.round:before {
     padding: 6px 12px;
     border-radius: 3px;
     cursor: pointer;
-    margin-right: 14px;
+    margin-right: 10px;
     transition: all 0.2s;
 }
 
-.audio-toggle-btn:hover {
+.audio-toggle-btn:hover, .hud-header-btn:hover {
     border-color: var(--accent-cyan);
     color: #ffffff;
 }
 
-.audio-toggle-btn.active {
+.audio-toggle-btn.active, .hud-header-btn.active {
     background: rgba(0, 240, 255, 0.15);
     border-color: var(--accent-cyan);
     color: var(--accent-cyan);
