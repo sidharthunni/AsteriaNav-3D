@@ -677,8 +677,16 @@ function setupUIEventListeners() {
 
         if (mode === "orbit") {
             logConsole("Camera Horizon Normalized to Ground Station Orbit", "sys");
+            if (controls) controls.target.set(0, 5, 0);
         } else if (mode === "rover") {
             logConsole("Camera Locked: Rover Chase Telemetry Cam", "sys");
+            if (roverGroup && roverCurve && showPath) {
+                const roverPos = roverGroup.position;
+                const tangent = roverCurve.getTangent(roverT).normalize();
+                const offset = tangent.clone().multiplyScalar(-26).add(new THREE.Vector3(0, 14, 0));
+                camera.position.copy(roverPos).add(offset);
+                camera.lookAt(roverPos.clone().add(tangent.clone().multiplyScalar(16)));
+            }
         } else if (mode === "cinematic") {
             logConsole("Camera Locked: 360° Cinematic Topographic Recon Flyover", "sys");
         }
@@ -847,9 +855,9 @@ function animate() {
     } else if (cameraMode === "rover" && roverGroup && roverCurve && showPath) {
         const roverPos = roverGroup.position;
         const tangent = roverCurve.getTangent(roverT).normalize();
-        const desiredCamPos = roverPos.clone().sub(tangent.clone().multiplyScalar(15)).add(new THREE.Vector3(0, 7.5, 0));
+        const desiredCamPos = roverPos.clone().sub(tangent.clone().multiplyScalar(26)).add(new THREE.Vector3(0, 14, 0));
         camera.position.lerp(desiredCamPos, 0.08);
-        const lookTarget = roverPos.clone().add(tangent.clone().multiplyScalar(12));
+        const lookTarget = roverPos.clone().add(tangent.clone().multiplyScalar(16));
         camera.lookAt(lookTarget);
     } else {
         if (controls) controls.update();
